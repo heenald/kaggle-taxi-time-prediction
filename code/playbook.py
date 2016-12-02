@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import json
 import re
 import math
 import numpy as np
@@ -49,8 +50,9 @@ def getEndLongt(polyline):
     return float(re.compile("[-+]?\d+.\d+").findall(points[-1])[0])
 
 #Get haversine distance between starting point and the city center
-def getCenterDist(row):
-    return haversineDistance(np.array(row.START_LONGITUDE,row.START_LATITUDE),np.array(-8.615223,41.157819))
+def getCenterDist(start_lat,start_longt):
+    print "here"
+    return haversineDistance(np.array([start_lat,start_longt]),np.array([-8.615223,41.157819]))
 
 #Get estimate of direction in which vehicle is moving - ignoring the curvature of earth.
 def getDirection(row):
@@ -79,7 +81,7 @@ def getBearing(row):
 
 
 t0 = time.time()
-df = pd.read_csv('../data/train.csv')
+df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)},nrows=5)
 df = df[df.MISSING_DATA == False]
 #For now removing the examples with empty polyline
 df= df[df.POLYLINE!='[]']
@@ -90,9 +92,8 @@ df['START_LATITUDE'] = df.apply(lambda row : getStartLat(row.POLYLINE), axis=1)
 df['START_LONGITUDE'] = df.apply(lambda row : getStartLongt(row.POLYLINE), axis=1)
 df['END_LATITUDE'] = df.apply(lambda row : getEndLat(row.POLYLINE), axis=1)
 df['END_LONGITUDE'] = df.apply(lambda row : getEndLongt(row.POLYLINE), axis=1)
-df['DISTANCE_FROM_CENTER'] = df.apply(lambda row : getCenterDist(row), axis=1)
+df['DISTANCE_FROM_CENTER'] = df.apply(lambda row : getCenterDist(row['START_LATITUDE'],row['START_LONGITUDE']), axis=1)
 df['BEARING'] = df.apply(lambda row : getBearing(row), axis=1)
-#print getTotalTime("[[-8.618643,41.141412],[-8.618499,41.141376]]")
 
 print time.time()-t0
 

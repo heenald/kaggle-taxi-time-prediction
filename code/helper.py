@@ -29,21 +29,24 @@ def haversineDistance(p1, p2):
 CENTER_LATITUDE = -8.615223
 CENTER_LONGITUDE = 41.157819
 
+# City center: median of trip end positions
+CITY_CENTER    = np.array([[-8.615223, 41.157819]], ndmin=2)
 
-df = pd.read_csv('../data/train.csv')
-df = df[df.MISSING_DATA == False]
-df= df[df.POLYLINE!='[]']
-print df.shape[0]
-df['END_LATITUDE'] = df.apply(lambda row : getEndLat(row.POLYLINE), axis=1)
-df['END_LONGITUDE'] = df.apply(lambda row : getEndLongt(row.POLYLINE), axis=1)
-lat=0.0
-longt=0.0
-for i in range(df.shape[0]):
-    lat+=df.iloc[[i]].END_LATITUDE
-    longt+=df.iloc[[i]].END_LONGITUDE
-
-lat/=df.shape[0]
-longt/=df.shape[0]
-
-print lat
-print longt
+#
+# # df = pd.read_csv('../data/train.csv')
+# df = df[df.MISSING_DATA == False]
+# df= df[df.POLYLINE!='[]']
+# print df.shape[0]
+# df['END_LATITUDE'] = df.apply(lambda row : getEndLat(row.POLYLINE), axis=1)
+# df['END_LONGITUDE'] = df.apply(lambda row : getEndLongt(row.POLYLINE), axis=1)
+# lat=0.0
+# longt=0.0
+# for i in range(df.shape[0]):
+#     lat+=df.iloc[[i]].END_LATITUDE
+#     longt+=df.iloc[[i]].END_LONGITUDE
+#
+# lat/=df.shape[0]
+# longt/=df.shape[0]
+#
+# print lat
+# print longt
