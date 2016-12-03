@@ -16,7 +16,6 @@ def getBearing(lat1,longt1,lat2,longt2):
 # Get median velocity for each trip
 def getVelocity(pln):
     distanceList = list()
-    print len(pln)
     if(len(pln)==1):
         return 0
     for i in range(1, len(pln)):
