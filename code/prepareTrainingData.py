@@ -46,11 +46,17 @@ def process_row_training(row):
         data += [0]
     data += [(len(pln)-1)*15]
     if (row['CALL_TYPE']=="A"):
-        data += [0]
-    elif (row['CALL_TYPE']=="B"):
         data += [1]
     else:
-        data += [2]
+        data += [0]
+    if (row['CALL_TYPE'] == "B"):
+        data += [1]
+    else:
+        data += [0]
+    if (row['CALL_TYPE'] == "C"):
+        data += [1]
+    else:
+        data += [0]
     data += [pln[0][0]]
     data += [pln[0][1]]
     data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
@@ -65,6 +71,8 @@ def process_row_test( row):
     pln = np.array(pln, ndmin=2)
     tt = time.localtime(row['TIMESTAMP'])
     data = [tt.tm_wday, tt.tm_hour]
+    #Hot Encoding
+    #Trip started on a holiday
     if (row['DAY_TYPE']=="B"):
         data += [1]
     else:
@@ -75,11 +83,17 @@ def process_row_test( row):
     else:
         data += [0]
     if (row['CALL_TYPE']=="A"):
-        data += [0]
-    elif (row['CALL_TYPE']=="B"):
         data += [1]
     else:
-        data += [2]
+        data += [0]
+    if (row['CALL_TYPE'] == "B"):
+        data += [1]
+    else:
+        data += [0]
+    if (row['CALL_TYPE'] == "C"):
+        data += [1]
+    else:
+        data += [0]
     data += [pln[0][0]]
     data += [pln[0][1]]
     data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
@@ -88,8 +102,8 @@ def process_row_test( row):
     return pd.Series(np.array(data, dtype=float))
 
 
-FEATURES_TRAIN = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','TOTAL_TIME','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
-FEATURES_TEST = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY','TRIP_ID']
+FEATURES_TRAIN = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','TOTAL_TIME','CALL_TYPE_A','CALL_TYPE_B','CALL_TYPE_C','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
+FEATURES_TEST = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE_A','CALL_TYPE_B','CALL_TYPE_C','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY','TRIP_ID']
 
 t0 = time.time()
 
@@ -116,10 +130,6 @@ ds.to_csv('../data/features1.csv', index=False)
 print('reading test data ...')
 df = pd.read_csv('../data/test.csv', converters={'POLYLINE': lambda x: json.loads(x)})
 
-print df.iloc[[4]]['POLYLINE']
-print getVelocity(df.iloc[[5]]['POLYLINE'])
-
-
 print('preparing test data ...')
 dt = df.apply(process_row_test, axis=1)
 dt = dt.join(df['TRIP_ID'])
@@ -128,4 +138,3 @@ dt.columns = FEATURES_TEST
 dt.to_csv('../data/test1.csv', index=False)
 
 print time.time()-t0
-
