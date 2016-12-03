@@ -19,7 +19,7 @@ def getVelocity(pln):
     print len(pln)
     if(len(pln)==1):
         return 0
-    for i in range(1, len(pln)-1):
+    for i in range(1, len(pln)):
 
         temp = haversineDistance(np.array([pln[i - 1][0], pln[i - 1][1]]),
                                  np.array([pln[i][0], pln[i][1]]))
@@ -95,7 +95,7 @@ FEATURES_TEST = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE','STAR
 t0 = time.time()
 
 print('reading training data ...')
-df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)}, nrows=70)
+df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)})
 #
 # print df.iloc[[69]]['POLYLINE']
 # print getVelocity(df.iloc[[69]]['POLYLINE'])
