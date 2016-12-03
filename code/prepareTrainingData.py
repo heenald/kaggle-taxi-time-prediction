@@ -16,12 +16,14 @@ def getBearing(lat1,longt1,lat2,longt2):
 # Get median velocity for each trip
 def getVelocity(pln):
     distanceList = list()
-
+    print len(pln)
+    if(len(pln)==1):
+        return 0
     for i in range(1, len(pln)-1):
+
         temp = haversineDistance(np.array([pln[i - 1][0], pln[i - 1][1]]),
                                  np.array([pln[i][0], pln[i][1]]))
         distanceList.append(temp)
-
     velocityList = np.array(distanceList)
     medianVelocity = np.median(velocityList)
     return medianVelocity / 15.0
@@ -63,7 +65,7 @@ def process_row_test( row):
         print "problem!"
     pln = np.array(pln, ndmin=2)
     tt = time.localtime(row['TIMESTAMP'])
-    data = [row['TRIP_ID'],tt.tm_wday, tt.tm_hour]
+    data = [tt.tm_wday, tt.tm_hour]
     if (row['DAY_TYPE']=="B"):
         data += [1]
     else:
@@ -84,20 +86,24 @@ def process_row_test( row):
     data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
     data += [getBearing(pln[0][1],pln[0][0],pln[-1][1],pln[-1][0])]
     data += [getVelocity(pln)]
-    return data
+    return pd.Series(np.array(data, dtype=float))
 
 
 FEATURES_TRAIN = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','TOTAL_TIME','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
-FEATURES_TEST = ['TRIP_ID','WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
+FEATURES_TEST = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY','TRIP_ID']
 
 t0 = time.time()
 
 print('reading training data ...')
-df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)}, nrows=100)
+df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)}, nrows=70)
+#
+# print df.iloc[[69]]['POLYLINE']
+# print getVelocity(df.iloc[[69]]['POLYLINE'])
 
 print('preparing train data ...')
 # X = []
 # for i in range(df.shape[0]):
+
 #     data = process_row_training(X, df.iloc[i])
 #     X.append(data)
 #
@@ -111,11 +117,16 @@ ds.to_csv('../data/features1.csv', index=False)
 print('reading test data ...')
 df = pd.read_csv('../data/test.csv', converters={'POLYLINE': lambda x: json.loads(x)})
 
+print df.iloc[[4]]['POLYLINE']
+print getVelocity(df.iloc[[5]]['POLYLINE'])
+
+
 print('preparing test data ...')
 dt = df.apply(process_row_test, axis=1)
+dt = dt.join(df['TRIP_ID'])
 dt.columns = FEATURES_TEST
-dt.to_csv('../data/test1.csv', index=False)
 
+dt.to_csv('../data/test1.csv', index=False)
 
 print time.time()-t0
 
