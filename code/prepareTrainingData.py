@@ -26,37 +26,96 @@ def getVelocity(pln):
     medianVelocity = np.median(velocityList)
     return medianVelocity / 15.0
 
-def process_row_training(X, row):
+def process_row_training(row):
     pln = row['POLYLINE']
-    if(len(pln)<1):
-        return None
+    if (len(pln) < 1):
+        return
     pln = np.array(pln, ndmin=2)
     tt = time.localtime(row['TIMESTAMP'])
-    data = [tt.tm_wday, tt.tm_hour, row['DAYTYPE']]
+    data = [tt.tm_wday, tt.tm_hour]
+    #Trip started on holiday
+    if (row['DAY_TYPE']=="B"):
+        data += [1]
+    else:
+        data += [0]
+    #Trip started on a day prior to holiday
+    if (row['DAY_TYPE']=="C"):
+        data += [1]
+    else:
+        data += [0]
     data += [(len(pln)-1)*15]
-    data += [row['CALL_TYPE']]
-    data+=[row['TAXI_ID']]
+    if (row['CALL_TYPE']=="A"):
+        data += [0]
+    elif (row['CALL_TYPE']=="B"):
+        data += [1]
+    else:
+        data += [2]
     data += [pln[0][0]]
     data += [pln[0][1]]
-    data += [pln[-1][0]]
-    data += [pln[-1][1]]
+    data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
+    data += [getBearing(pln[0][1],pln[0][0],pln[-1][1],pln[-1][0])]
+    data += [getVelocity(pln)]
+    return pd.Series(np.array(data, dtype=float))
+
+def process_row_test( row):
+    pln = row['POLYLINE']
+    if(len(pln)<1):
+        print "problem!"
+    pln = np.array(pln, ndmin=2)
+    tt = time.localtime(row['TIMESTAMP'])
+    data = [row['TRIP_ID'],tt.tm_wday, tt.tm_hour]
+    if (row['DAY_TYPE']=="B"):
+        data += [1]
+    else:
+        data += [0]
+    #Trip started on a day prior to holiday
+    if (row['DAY_TYPE']=="C"):
+        data += [1]
+    else:
+        data += [0]
+    if (row['CALL_TYPE']=="A"):
+        data += [0]
+    elif (row['CALL_TYPE']=="B"):
+        data += [1]
+    else:
+        data += [2]
+    data += [pln[0][0]]
+    data += [pln[0][1]]
     data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
     data += [getBearing(pln[0][1],pln[0][0],pln[-1][1],pln[-1][0])]
     data += [getVelocity(pln)]
     return data
 
-FEATURES = ['wday','hour','daytype','totalTime','call_type','taxi_id','startLongt','startLat','endLongt','endLat','startDistFromCenter','bearing','velocity']
+
+FEATURES_TRAIN = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','TOTAL_TIME','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
+FEATURES_TEST = ['TRIP_ID','WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
+
 t0 = time.time()
 
 print('reading training data ...')
-df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)})
+df = pd.read_csv('../data/train.csv', converters={'POLYLINE': lambda x: json.loads(x)}, nrows=100)
 
 print('preparing train data ...')
-X = []
-for i in range(df.shape[0]):
-    data = process_row_training(X, df.iloc[i])
-    if data != None:
-        X.append(data)
+# X = []
+# for i in range(df.shape[0]):
+#     data = process_row_training(X, df.iloc[i])
+#     X.append(data)
+#
+# print X
+
+ds = df.apply(process_row_training, axis=1)
+ds.columns = FEATURES_TRAIN
+ds.to_csv('../data/features1.csv', index=False)
+
+
+print('reading test data ...')
+df = pd.read_csv('../data/test.csv', converters={'POLYLINE': lambda x: json.loads(x)})
+
+print('preparing test data ...')
+dt = df.apply(process_row_test, axis=1)
+dt.columns = FEATURES_TEST
+dt.to_csv('../data/test1.csv', index=False)
+
 
 print time.time()-t0
 
