@@ -8,10 +8,15 @@ from helper import haversineDistance, CITY_CENTER
 #Get bearing (angle of direction) in which vehicle is moving
 def getBearing(lat1,longt1,lat2,longt2):
 
-    dlon = abs(longt2-longt1)
+    lat1 = np.radians(lat1)
+    lat2 = np.radians(lat2)
+    longt1 = np.radians(longt1)
+    longt2 = np.radians(longt2)
+
+    dlon = longt2-longt1
     X = np.cos(lat2)*np.sin(dlon)
     Y = np.cos(lat1)*np.sin(lat2)-np.sin(lat1)*np.cos(lat2)*np.cos(dlon)
-    return math.atan2(X,Y)*(180/math.pi)
+    return np.degrees(math.atan2(X,Y))
 
 # Get median velocity for each trip
 def getVelocity(pln):
@@ -45,18 +50,6 @@ def process_row_training(row):
     else:
         data += [0]
     data += [(len(pln)-1)*15]
-    if (row['CALL_TYPE']=="A"):
-        data += [1]
-    else:
-        data += [0]
-    if (row['CALL_TYPE'] == "B"):
-        data += [1]
-    else:
-        data += [0]
-    if (row['CALL_TYPE'] == "C"):
-        data += [1]
-    else:
-        data += [0]
     data += [pln[0][0]]
     data += [pln[0][1]]
     data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
@@ -82,18 +75,6 @@ def process_row_test( row):
         data += [1]
     else:
         data += [0]
-    if (row['CALL_TYPE']=="A"):
-        data += [1]
-    else:
-        data += [0]
-    if (row['CALL_TYPE'] == "B"):
-        data += [1]
-    else:
-        data += [0]
-    if (row['CALL_TYPE'] == "C"):
-        data += [1]
-    else:
-        data += [0]
     data += [pln[0][0]]
     data += [pln[0][1]]
     data += [haversineDistance(pln[0, :], CITY_CENTER)[0]]
@@ -102,8 +83,8 @@ def process_row_test( row):
     return pd.Series(np.array(data, dtype=float))
 
 
-FEATURES_TRAIN = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','TOTAL_TIME','CALL_TYPE_A','CALL_TYPE_B','CALL_TYPE_C','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
-FEATURES_TEST = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','CALL_TYPE_A','CALL_TYPE_B','CALL_TYPE_C','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY','TRIP_ID']
+FEATURES_TRAIN = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','TOTAL_TIME','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY']
+FEATURES_TEST = ['WEEK_DAY','HOUR','HOLIDAY','PREV_TO_HOLIDAY','START_LONGT','START_LAT','START_DIST_FROM_CENTER','BEARING','VELOCITY','TRIP_ID']
 
 t0 = time.time()
 
@@ -124,7 +105,7 @@ print('preparing train data ...')
 
 ds = df.apply(process_row_training, axis=1)
 ds.columns = FEATURES_TRAIN
-ds.to_csv('../data/features1.csv', index=False)
+ds.to_csv('../data/features3.csv', index=False)
 
 
 print('reading test data ...')
@@ -135,6 +116,7 @@ dt = df.apply(process_row_test, axis=1)
 dt = dt.join(df['TRIP_ID'])
 dt.columns = FEATURES_TEST
 
-dt.to_csv('../data/test1.csv', index=False)
+dt.to_csv('../data/test3.csv', index=False)
 
 print time.time()-t0
+#5242 secs
