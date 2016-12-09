@@ -46,7 +46,7 @@ for t in range(40,80):
 
     X = pd.DataFrame()
     for i in range(df.shape[0]):
-        if i%10000 ==0:
+        if i%100000 ==0:
             print "Progressed to:",i
         if (isNear(testRow, df.iloc[[i]])):
             X=X.append(df.iloc[[i]])
