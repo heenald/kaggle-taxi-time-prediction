@@ -48,7 +48,7 @@ for train_idx, test_idx in KFold(X.shape[0], n_folds=5):
     t0 = time.time()
     X_train, X_test, y_train, y_test = X[train_idx, :], X[test_idx, :], y[train_idx], y[test_idx]
 
-    reg_model = RandomForestRegressor(n_estimators=200)
+    reg_model = RandomForestRegressor()(n_estimators=200)
     reg_model.fit(X_train, y_train)
     y_pred = reg_model.predict(X_test)
 

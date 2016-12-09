@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 t0 = time.time()
 
-df = pd.read_csv('../data/features1.csv')
+df = pd.read_csv('../data/features2.csv')
 
 # create training set
 y = np.log(df['TOTAL_TIME'])
@@ -24,7 +24,7 @@ clf = RandomForestRegressor(n_estimators=200, n_jobs=-1, random_state=21)
 clf.fit(X, y)
 
 print('predicting test data ...')
-df = pd.read_csv('../data/test1.csv')
+df = pd.read_csv('../data/test2.csv')
 ids = df['TRIP_ID']
 
 df = df.drop(['TRIP_ID'], axis=1)
@@ -35,6 +35,6 @@ y_pred = clf.predict(X_tst)
 # create submission file
 submission = pd.DataFrame(ids, columns=['TRIP_ID'])
 submission['TRAVEL_TIME'] = np.exp(y_pred)
-submission.to_csv('../data/submission1', index=False)
+submission.to_csv('../data/submission2', index=False)
 
 print('Done in %.1f sec.' % (time.time() - t0))
